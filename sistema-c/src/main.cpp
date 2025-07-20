@@ -22,6 +22,9 @@ unsigned long stateChangeTimestamp = 0;
 unsigned long lastBlinkTimestamp = 0;
 bool ledState = false;
 
+void handleBlinking();
+void disarmAlarm();
+
 void setup() {
   Serial.begin(115200);
   
