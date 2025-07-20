@@ -1,0 +1,66 @@
+name: Build Sistema B
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: 
+      - 'sistema-b/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'sistema-b/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build Sistema B (Monitorização Ambiental)
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Cache PlatformIO
+      uses: actions/cache@v4
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-pio-sistema-b-${{ hashFiles('sistema-b/platformio.ini') }}
+        restore-keys: |
+          ${{ runner.os }}-pio-sistema-b-
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+
+    - name: Build Sistema B
+      working-directory: ./sistema-b
+      run: pio run -e esp32dev
+
+    - name: Check build output
+      working-directory: ./sistema-b
+      run: |
+        ls -la .pio/build/esp32dev/
+        echo "Build completed successfully for Sistema B"
+
+    - name: Archive firmware
+      uses: actions/upload-artifact@v4
+      with:
+        name: sistema-b-firmware-${{ github.sha }}
+        path: |
+          sistema-b/.pio/build/esp32dev/firmware.bin
+          sistema-b/.pio/build/esp32dev/firmware.elf
+        retention-days: 30
