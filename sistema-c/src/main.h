@@ -1,0 +1,2 @@
+void handleBlinking();
+void disarmAlarm();
