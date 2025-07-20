@@ -96,6 +96,7 @@ void taskControloSistema(void * parameter) {
         break;
 
       case ABERTA:
+        Serial.println("Estado: ABERTA");
         // Se já passou o tempo, inicia o fecho
         if (millis() - tempoAbertura > TEMPO_ABERTA_MS) {
           estadoCancela = FECHANDO;
@@ -111,6 +112,7 @@ void taskControloSistema(void * parameter) {
         break;
 
       case FECHADA:
+        Serial.println("Estado: FECHADA");
         // Estado de repouso, não faz nada
         break;
     }
