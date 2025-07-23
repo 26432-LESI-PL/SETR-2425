@@ -23,9 +23,6 @@ void setup() {
   pinMode(LED_VERMELHO_PIN, OUTPUT);
   pinMode(LED_VERDE_PIN, OUTPUT);
 
-  // Desliga o relay por padrão (nível ALTO para muitos módulos de relay)
-  // IMPORTANTE: Alguns relays ativam com LOW e outros com HIGH.
-  // Se a ventoinha ligar quando devia desligar, mude HIGH para LOW e vice-versa.
   digitalWrite(RELAY_PIN, HIGH);
 
   lcd.init(I2C_SDA, I2C_SCL); // Inicializa o LCD com os pinos I2C
