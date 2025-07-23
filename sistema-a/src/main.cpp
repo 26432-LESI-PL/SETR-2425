@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 const int LDR_PIN = 34;
-const int LED_PIN = 22;
+const int LED_PIN = 25;
 
 void setup() {
   Serial.begin(115200);

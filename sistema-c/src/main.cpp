@@ -1,8 +1,8 @@
 #include <Arduino.h>
 
-const int PIR_PIN = 13;
-const int LED_PIN = 14;
-const int BUZZER_PIN = 12;
+const int PIR_PIN = 19;
+const int LED_PIN = 17;
+const int BUZZER_PIN = 21;
 const int BUTTON_PIN = 23;
 
 const unsigned long ALARM_DURATION_MS = 10000; // 10 segundos

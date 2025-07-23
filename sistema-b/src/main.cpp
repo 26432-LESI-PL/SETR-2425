@@ -3,14 +3,15 @@
 #include <Adafruit_BMP280.h>
 #include <LiquidCrystal_I2C.h>
 
-const int RELAY_PIN = 27;
-const int LED_VERMELHO_PIN = 26;
-const int LED_VERDE_PIN = 25;
-
+const int RELAY_PIN = 4;
+const int LED_VERMELHO_PIN = 17;
+const int LED_VERDE_PIN = 16;
+#define I2C_SDA 21
+#define I2C_SCL 22
 const float TEMP_MAXIMA_LIGAR = 24.0;
 const float TEMP_MINIMA_DESLIGAR = 20.0;
 
-LiquidCrystal_I2C lcd(0x27, 16, 2); 
+LiquidCrystal_I2C lcd(0x3F, 16, 2); 
 Adafruit_BMP280 bmp;
 
 bool ventoinhaLigada = false;
@@ -27,13 +28,13 @@ void setup() {
   // Se a ventoinha ligar quando devia desligar, mude HIGH para LOW e vice-versa.
   digitalWrite(RELAY_PIN, HIGH);
 
-  lcd.init();
+  lcd.init(I2C_SDA, I2C_SCL); // Inicializa o LCD com os pinos I2C
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print("A iniciar...");
 
   // Inicializar o sensor BMP280
-  if (!bmp.begin()) {
+  if (!bmp.begin(0x76)) {
     Serial.println("Nao foi possivel encontrar o sensor BMP280");
     lcd.clear();
     lcd.print("Erro no Sensor BMP280!");

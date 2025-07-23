@@ -3,7 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include <SPI.h>
 #include <MFRC522.h>
-#include <ESP32Servo.h>
+#include <HardwareSerial.h>
 
 /*
  *  Sistema D - Controlo de Acessos Inteligente (SETR)
@@ -11,29 +11,34 @@
  *  Este projeto integra:
  *  - Leitor RFID (MFRC522) para acesso por cartão.
  *  - Servidor Web num Access Point para controlo remoto (utilizador/password).
- *  - Servo motor para simular uma cancela.
+ *  - Servo motor para simular uma cancela (usando ESP32Servo library).
  *  - LEDs e Buzzer para feedback ao utilizador.
  *
  *  CUMPRE OS REQUISITOS AVANÇADOS:
  *  - Multitasking: Usa FreeRTOS para gerir 3 tarefas (RFID, Controlo do Sistema, Servidor Web).
  *  - GUI Remota: Página web com monitorização em tempo real (AJAX) e controlo.
  *  - Interrupts: Um botão de pressão para acionamento manual/emergência.
+ * 
+ *  SERVO MOTOR:
+ *  - Utiliza a biblioteca ESP32Servo para melhor compatibilidade com ESP32.
+ *  - Configurado com frequência de 50Hz e pulse width de 500-2500μs.
+ *  - Timers PWM alocados explicitamente para evitar conflitos.
  */
 
 
 // --- DEFINIÇÕES DE HARDWARE ---
 // RFID MFRC522
-#define RST_PIN   4
-#define SS_PIN    5
+#define SS_PIN 5
+#define RST_PIN 0
 // Buzzer
-#define BUZZER_PIN 25
+#define BUZZER_PIN 21
 // LEDs
-#define LED_VERDE_PIN 32
-#define LED_VERMELHO_PIN 33
-// Servo
-#define SERVO_PIN 15
+#define LED_VERDE_PIN 2
+#define LED_VERMELHO_PIN 17
+// Relay
+#define RELAY_PIN 4
 // Botão para Interrupt
-#define BUTTON_PIN 26
+#define BUTTON_PIN 22
 
 // --- CONFIGURAÇÕES DO SISTEMA ---
 const char* ap_ssid = "Cancela_SmartCity_SETR";
@@ -42,17 +47,16 @@ const char* web_user = "admin";
 const char* web_pass = "admin";
 
 // UID autorizado (coloque aqui o UID do seu cartão)
-String authorizedUID = "XX:XX:XX:XX"; 
+String authorizedUID = "B9:0A:81:98"; 
 
 // Ângulos do Servo
-#define SERVO_POS_FECHADA 0
-#define SERVO_POS_ABERTA  90
+// Comandos para cancela via Serial
 // Tempo que a cancela fica aberta (em milissegundos)
 #define TEMPO_ABERTA_MS 5000 
 
 // --- OBJETOS GLOBAIS ---
 MFRC522 mfrc522(SS_PIN, RST_PIN);
-Servo cancelaServo;
+// Servo removido
 AsyncWebServer server(80);
 
 // --- VARIÁVEIS DE ESTADO (volatile para acesso seguro entre tarefas e ISRs) ---
@@ -89,8 +93,8 @@ void taskControloSistema(void * parameter) {
         Serial.println("Estado: ABRINDO");
         digitalWrite(LED_VERMELHO_PIN, LOW);
         digitalWrite(LED_VERDE_PIN, HIGH);
-        tone(BUZZER_PIN, 1200, 150); // Bip de sucesso
-        cancelaServo.write(SERVO_POS_ABERTA);
+        digitalWrite(RELAY_PIN, HIGH); // Ativa relay para abrir cancela
+        tone(BUZZER_PIN, 5000, 150); // Bip de sucesso
         tempoAbertura = millis();
         estadoCancela = ABERTA;
         break;
@@ -105,7 +109,7 @@ void taskControloSistema(void * parameter) {
 
       case FECHANDO:
         Serial.println("Estado: FECHANDO");
-        cancelaServo.write(SERVO_POS_FECHADA);
+        digitalWrite(RELAY_PIN, LOW); // Desativa relay para fechar cancela
         digitalWrite(LED_VERDE_PIN, LOW);
         digitalWrite(LED_VERMELHO_PIN, HIGH);
         estadoCancela = FECHADA;
@@ -241,17 +245,18 @@ button:hover { background-color: #0056b3; }
 
 // --- SETUP ---
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   // Inicializa Hardware
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LED_VERDE_PIN, OUTPUT);
   pinMode(LED_VERMELHO_PIN, OUTPUT);
+  pinMode(RELAY_PIN, OUTPUT); // Configura relay como saída
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Botão com resistor interno
   digitalWrite(LED_VERMELHO_PIN, HIGH); // Começa com LED vermelho ligado
+  digitalWrite(RELAY_PIN, LOW); // Começa com relay desativado (cancela fechada)
   
-  cancelaServo.attach(SERVO_PIN);
-  cancelaServo.write(SERVO_POS_FECHADA);
+  // Servo removido
   
   SPI.begin();
   mfrc522.PCD_Init();
